@@ -1,1 +1,3 @@
-# victpowerToMqtt
+# VictpowerToMqtt
+Simple python script to publish Victpower's High Power Reechargeable battery values retrieved via rs485 to Mqtt.
+<a href="https://imgbb.com/"><img src="https://i.ibb.co/6BX29NW/Schermafbeelding-2019-06-07-om-23-25-27.png" alt="Schermafbeelding-2019-06-07-om-23-25-27" border="0"></a>
