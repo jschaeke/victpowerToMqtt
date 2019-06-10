@@ -23,10 +23,11 @@ dbuser = 'admin'
 dbuser_password = None
 influxdb_client = None
 
+influx_host="localhost"
 broker="192.168.1.30"
 
 def init():
-    influxdb_client = InfluxDBClient(host, port, user, password, dbname)
+    influxdb_client = InfluxDBClient(influx_host, port, user, password, dbname)
     influxdb_client.switch_database(database=db_name)
 
 def _intToBin(toConvert):
