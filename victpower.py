@@ -16,18 +16,18 @@ instrument.serial.stopbits = 1
 instrument.serial.timeout  = 0.2
 instrument.mode = minimalmodbus.MODE_RTU
 
-user = None
-password = None
+
+
 dbname = 'powerwall'
 dbuser = 'admin'
-dbuser_password = None
 influxdb_client = None
 
 influx_host="localhost"
+influx_port=8086
 broker="192.168.1.30"
 
 def init():
-    influxdb_client = InfluxDBClient(influx_host, port, user, password, dbname)
+    influxdb_client = InfluxDBClient(influx_host=influx_host, influx_port=influx_port, dbname=dbname, dbuser=dbuser)
     influxdb_client.switch_database(database=db_name)
 
 def _intToBin(toConvert):
