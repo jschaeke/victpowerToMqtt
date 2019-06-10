@@ -5,7 +5,8 @@ import socket
 import serial
 import paho.mqtt.client as paho
 import time
-import datetime
+import simplejson as json
+from datetime import datetime
 from influxdb import InfluxDBClient
 
 instrument = minimalmodbus.Instrument('/dev/ttyUSB0', 1)
@@ -26,10 +27,6 @@ influx_host="localhost"
 influx_port=8086
 broker="192.168.1.30"
 
-def init():
-    influxdb_client = InfluxDBClient(influx_host=influx_host, influx_port=influx_port, dbname=dbname, dbuser=dbuser)
-    influxdb_client.switch_database(database=db_name)
-
 def _intToBin(toConvert):
     #Here you convert the int value to binary, after that to string getting from index 2 to 10
     MSByte = str(bin(toConvert))[2:10]
@@ -38,7 +35,6 @@ def _intToBin(toConvert):
     final = MSByte+LSByte
     return final
 
-init()
 while True:
 	try:
             voltage = instrument.read_register(4097-1, numberOfDecimals=2, functioncode=4, signed=False)
@@ -87,18 +83,21 @@ while True:
                 }
             ]
             # MQTT
+	    print("Preparing MQTT")
             client= paho.Client("victorpi")
             client.connect(broker)
             client.loop_start()
             time.sleep(2)
-            client.publish("victpower/", json_body[0]['fields'].dumps())
+            client.publish("victpower/", json.dumps(json_body[0]['fields']))
             client.loop_stop()
             #Influxdb
+	    print("Preparing influxdb")
+	    influxdb_client = InfluxDBClient(host=influx_host, port=influx_port)
+    	    influxdb_client.switch_database(database=dbname)
             response = influxdb_client.write_points(points=json_body)
-            print "write_operation response", responses
+            print "write_operation response", response
             # Get some sleep for the next reading
             time.sleep(120)
 
 	except Exception, e:
 		print(str(e))
-        init()
