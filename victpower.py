@@ -9,15 +9,15 @@ import simplejson as json
 from datetime import datetime
 from influxdb import InfluxDBClient
 
+
 instrument = minimalmodbus.Instrument('/dev/ttyUSB0', 1)
 instrument.serial.baudrate = 9600
 instrument.serial.bytesize = 8
 instrument.serial.parity   = serial.PARITY_NONE
 instrument.serial.stopbits = 1
-instrument.serial.timeout  = 0.2
+instrument.serial.timeout  = 0.5
 instrument.mode = minimalmodbus.MODE_RTU
-
-
+instrument.CLOSE_PORT_AFTER_EACH_CALL=True
 
 dbname = 'powerwall'
 dbuser = 'admin'
@@ -36,10 +36,9 @@ def _intToBin(toConvert):
     return final
 
 while True:
-	try:
             voltage = instrument.read_register(4097-1, numberOfDecimals=2, functioncode=4, signed=False)
             print("Voltage: " + str(voltage) + "V")
-            currentpack = instrument.read_register(4098-1, numberOfDecimals=2, functioncode=4, signed=True)
+	    currentpack = instrument.read_register(4098-1, numberOfDecimals=2, functioncode=4, signed=True)
             print("Current of pack: " + str(currentpack) + "A")
             capacity = instrument.read_register(4099-1, numberOfDecimals=2, functioncode=4, signed=False)
             print("Capacity: " + str(capacity) + "AH")
@@ -61,6 +60,11 @@ while True:
             print("Protect: " + str(protect) + "bit")
             status = _intToBin(instrument.read_register(4104-1, numberOfDecimals=0, functioncode=4, signed=False))
             print("Status: " + str(status) + "bit")
+ 	    minvoltage = instrument.read_register(4111-1, numberOfDecimals=3, functioncode=4, signed=False)
+            print("Min Cell Voltage: " + str(minvoltage) + "V")
+	    maxvoltage = instrument.read_register(4110-1, numberOfDecimals=3, functioncode=4, signed=False)
+            print("Max Cell Voltage: " + str(maxvoltage) + "V")
+
 
             json_body = [
                 {
@@ -78,7 +82,9 @@ while True:
                         "cycle": cycle,
                         "warn": warn,
                         "protect": protect,
-                        "status": status
+                        "status": status,
+			"mincellvoltage": minvoltage,
+			"maxcellvoltage": maxvoltage
                       }
                 }
             ]
@@ -97,7 +103,4 @@ while True:
             response = influxdb_client.write_points(points=json_body)
             print "write_operation response", response
             # Get some sleep for the next reading
-            time.sleep(120)
-
-	except Exception, e:
-		print(str(e))
+            time.sleep(15)
