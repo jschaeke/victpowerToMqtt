@@ -17,16 +17,16 @@ instrument1.serial.parity   = serial.PARITY_NONE
 instrument1.serial.stopbits = 1
 instrument1.serial.timeout  = 0.5
 instrument1.mode = minimalmodbus.MODE_RTU
-instrument1.CLOSE_PORT_AFTER_EACH_CALL=True
+instrument1.CLOSE_PORT_AFTER_EACH_CALL = True
 instrument2 = minimalmodbus.Instrument('/dev/ttyUSB0', 2)
 
 dbname = 'powerwall'
 dbuser = 'admin'
 influxdb_client = None
 
-influx_host="localhost"
-influx_port=8086
-broker="localhost"
+influx_host = "localhost"
+influx_port = 8086
+broker = "localhost"
 
 def _intToBin(toConvert):
     #Here you convert the int value to binary, after that to string getting from index 2 to 10
@@ -37,7 +37,7 @@ def _intToBin(toConvert):
     return final
 
 def read(instrument, batteryName):
-    print("batteryName")
+    print(batteryName)
     voltage = instrument.read_register(4097-1, numberOfDecimals=2, functioncode=4, signed=False)
     print("Voltage: " + str(voltage) + "V")
     currentpack = instrument.read_register(4098-1, numberOfDecimals=2, functioncode=4, signed=True)
@@ -70,7 +70,7 @@ def read(instrument, batteryName):
 
     json_body = [
         {
-            "measurement": "battery",
+            "measurement": batteryName,
             "time": datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
             "fields": {
                 "voltage": voltage,
@@ -91,21 +91,21 @@ def read(instrument, batteryName):
         }
     ]
     # MQTT
-# print("Preparing MQTT")
-#     client = paho.Client("victorpi")
-#     client.connect(broker)
-#     client.loop_start()
-#     time.sleep(2)
-#     client.publish("victpower/", json.dumps(json_body[0]['fields']))
-#     client.loop_stop()
+    print("Preparing MQTT")
+    client = paho.Client("victorpi")
+    client.connect(broker)
+    client.loop_start()
+    time.sleep(2)
+    client.publish("victpower/" + batteryName + "/", json.dumps(json_body[0]['fields']))
+    client.loop_stop()
     #Influxdb
-# print("Preparing influxdb")
-#     influxdb_client = InfluxDBClient(host=influx_host, port=influx_port)
-#     influxdb_client.switch_database(database=dbname)
-#     response = influxdb_client.write_points(points=json_body)
-#     print "write_operation response", response
-#     # Get some sleep for the next reading
-    time.sleep(15)
+    print("Preparing influxdb")
+    influxdb_client = InfluxDBClient(host=influx_host, port=influx_port)
+    influxdb_client.switch_database(database=dbname)
+    response = influxdb_client.write_points(points=json_body)
+    print "write_operation response", response
+    
 while True:
     read(instrument1, "battery1")
     read(instrument2, "battery2")
+    time.sleep(15)
