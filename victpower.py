@@ -23,9 +23,9 @@ dbname = 'powerwall'
 dbuser = 'admin'
 influxdb_client = None
 
-influx_host="localhost"
-influx_port=8086
-broker="192.168.1.30"
+influx_host = "localhost"
+influx_port = 8086
+broker = "192.168.1.30"
 
 def _intToBin(toConvert):
     #Here you convert the int value to binary, after that to string getting from index 2 to 10
@@ -98,7 +98,7 @@ while True:
             client.loop_stop()
             #Influxdb
 	    print("Preparing influxdb")
-	    influxdb_client = InfluxDBClient(host=influx_host, port=influx_port)
+	        influxdb_client = InfluxDBClient(host=influx_host, port=influx_port)
     	    influxdb_client.switch_database(database=dbname)
             response = influxdb_client.write_points(points=json_body)
             print "write_operation response", response
